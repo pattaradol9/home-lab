@@ -21,6 +21,7 @@ apt install -y \
   unzip \
   zip \
   jq \
+  nano \
   software-properties-common \
   ca-certificates \
   gnupg \
@@ -87,12 +88,11 @@ systemctl start ssh
 systemctl start docker
 
 echo "=== Configure Static IP Address ==="
-
 INTERFACE=$(ip route | awk '/default/ { print $5; exit }')
-echo "🖧 Detected interface: $INTERFACE"
+echo "Detected interface: $INTERFACE"
 
 while [[ -z "${STATIC_IP:-}" ]]; do
-  read -rp "📥 Enter static IP address (e.g., 192.168.0.103 or 192.168.0.103/24): " STATIC_IP
+  read -rp "📥 Enter static IP address (e.g., 192.168.0.100 or 192.168.0.100/24): " STATIC_IP
 done
 
 if [[ "$STATIC_IP" != */* ]]; then
@@ -113,7 +113,7 @@ if [ -f "$NETPLAN_CONFIG" ]; then
   echo "⚠️ Netplan config already exists at $NETPLAN_CONFIG"
   read -rp "❓ Overwrite existing config? (y/N): " OVERWRITE
   if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
-    echo "❌ Skipped static IP configuration."
+    echo "❌ Canceled by user."
     exit 0
   fi
 fi
@@ -133,10 +133,12 @@ network:
           via: $GATEWAY
 EOF
 
-chmod 600 "$NETPLAN_CONFIG"
+sudo chmod 600 "$NETPLAN_CONFIG"
 
 echo "✅ Netplan config written to $NETPLAN_CONFIG"
 echo "🌀 Applying netplan..."
-netplan apply
+sudo netplan apply
+
+echo "🎉 Static IP configured successfully!"
 
 echo "🎉 All done! You may reboot now to apply everything."
